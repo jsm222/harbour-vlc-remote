@@ -1,50 +1,14 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import QtQuick.XmlListModel 2.0
-
+import harbour.vlc_remote 1.0
 Page {
-    id: page
-
-    XmlListModel{
-        id: xmlModel
-        query: "/node/node/leaf"
-
-        XmlRole{ name: "name"; query: "@name/string()"}
-        XmlRole{ name: "id"; query: "@id/string()"}
-        //XmlRole{ name: "duration"; query: "@duration/string()"}
-        //XmlRole{ name: "uri"; query: "@uri/string()"}
-        XmlRole{ name: "current"; query: "@current/string()"}
-    }
-
-    function getVLCMedia()
-    {
-        var httpReq = new XMLHttpRequest()
-        var url = "http://" + ip + ":" + port + "/requests/playlist.xml"
-
-        httpReq.open("GET", url, true);
-
-        // Send the proper header information along with the request
-        httpReq.setRequestHeader("Authorization", "Basic " + Qt.btoa(username + ":" + password));
-        httpReq.setRequestHeader('Content-Type',  'text/xml');
-
-        httpReq.onreadystatechange = function()
-        {
-            if(httpReq.readyState === 4 && httpReq.status == 200)
-            {
-                xmlModel.xml = httpReq.responseText;
-                xmlWaitTimer.start();
-            }
-        }
-        httpReq.send(null);
-    }
-
-    function updateXML()
-    {
-        if (xmlModel.status === XmlListModel.Ready)
-        {
-            xmlWaitTimer.stop();
-            xmlRefresh.start()
-        }
+property string currentId: "0";
+    PlaylistModel {
+        id: listModel
+        password:rootWindow.password
+        username:rootWindow.username
+        remoteUrl:rootWindow.ip+":"+rootWindow.port
     }
 
     Timer {
@@ -55,18 +19,36 @@ Page {
     Timer {
         id: xmlRefresh
         interval: 50; running: false; repeat: false
-        onTriggered: getVLCMedia()
+        onTriggered: getVLCMedia();
+    }
+    Timer {
+        id:gainFocusTimer
+        interval: 10;running:false;repeat: true;
+        onTriggered: {listView.headerItem.forceActiveFocus()}
     }
 
     SilicaListView {
         id: listView
-        model: xmlModel
+        model:listModel.proxyModel
         anchors.fill: parent
-        header: PageHeader {
-            title: "Playlist"
-        }
+        header: SearchField {
+            id:sf
+            width: parent.width
+            placeholderText: "Search playlist"
+            text:""
 
-        Component.onCompleted: getVLCMedia()
+            onTextChanged: {
+
+                listModel.search=sf.text;
+                gainFocusTimer.start();
+                if(sf.text==="") {
+                    gainFocusTimer.stop()
+                }
+
+            }
+
+
+        }
 
         PullDownMenu {
 
@@ -79,7 +61,6 @@ Page {
                 onClicked: listView.scrollToBottom()
             }
         }
-
         PushUpMenu {
             id: pushUpMenu
             spacing: Theme.paddingLarge
@@ -88,14 +69,23 @@ Page {
                 onClicked: listView.scrollToTop()
             }
         }
-
+        /*        delegate: ListItem {
+             width: parent.width; height: 50
+           Text {
+               color:Theme.primaryColor
+               text:name
+           }
+        }
+*/
         delegate: ListItem {
+            //           visible: found.indexOf(id) !==-1
             id: delegate
             menu: contextMenu
             function remove() {
                 remorseAction("Deleting", function() {
-                    passCommands("pl_delete&id=" + xmlModel.get(index).id )
-                    getVLCMedia() })
+                    passCommands("pl_delete&id=" + id )
+                    listModel.update();
+                })
             }
 
             Image{
@@ -104,13 +94,13 @@ Page {
                 anchors.margins: Theme.paddingLarge
                 anchors.verticalCenter: parent.verticalCenter
                 opacity: 0.8
-                source: xmlModel.get(index).current === "current" ? "icons/icon-cover-play.png" : "image://theme/icon-m-sound"
+                source: id === "-1" ? "image://theme/icon-m-developer-mode" : name === "" ? null : id === currentId ? "icons/icon-cover-play.png" : "image://theme/icon-m-music"
             }
 
-            Label {
-                text: name
-                truncationMode: TruncationMode.Fade
-                color: delegate.highlighted || xmlModel.get(index).current === "current" ? Theme.highlightColor : Theme.primaryColor
+            Text {
+                //truncationMode: TruncationMode.Fade
+                color: delegate.highlighted || currentId === id ? Theme.highlightColor :  Theme.primaryColor
+                text:name
                 anchors.left: listIcon.right
                 anchors.right: parent.right
                 anchors.margins: Theme.paddingMedium
@@ -118,13 +108,15 @@ Page {
             }
 
             onClicked: {
-                passCommands("pl_play&id=" + xmlModel.get(index).id )
-                xmlModel.get(index).current = "current"
-                getVLCMedia()
+                passCommands("pl_play&id=" + id )
+                currentId = id;
+                listView.forceLayout()
+
             }
 
             Component {
                 id: contextMenu
+
                 ContextMenu {
 
                     MenuItem {
@@ -136,6 +128,10 @@ Page {
         }
         VerticalScrollDecorator {}
     }
+
+
+
+
+
+
 }
-
-
