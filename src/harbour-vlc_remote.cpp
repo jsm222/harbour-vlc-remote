@@ -28,10 +28,8 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifdef QT_QML_DEBUG
-#include <QtQuick>
-#endif
 
+#include <QtQuick>
 #include <sailfishapp.h>
 #include "playlistmodel.h"
 int main(int argc, char *argv[])
@@ -53,7 +51,7 @@ int main(int argc, char *argv[])
        // For details see:
        // https://harbour.jolla.com/faq#1.5.0
        qmlRegisterType<PlaylistModel>("harbour.vlc_remote", 1, 0, "PlaylistModel");
-        qRegisterMetaType<QSortFilterProxyModel*>("QSortFilterProxyModel*");
+       qRegisterMetaType<QSortFilterProxyModel*>("QSortFilterProxyModel*");
        // Start the application.
        v->setSource(SailfishApp::pathTo("qml/harbour-vlc_remote.qml"));
        v->show();

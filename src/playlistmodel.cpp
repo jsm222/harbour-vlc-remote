@@ -13,7 +13,7 @@ connect(m_handler,&Handler::mEndDocument,[this] {
 connect(m_manager,&QNetworkAccessManager::finished,this,&PlaylistModel::requestReceived);
 connect(m_manager,&QNetworkAccessManager::authenticationRequired,this,&PlaylistModel::authenticate);
 connect(this,&PlaylistModel::searchChanged,[this]() {
-m_manager->clearAccessCache();
+
 
     m_proxyModel->setFilterRegExp(QRegExp(search(), Qt::CaseInsensitive));
 

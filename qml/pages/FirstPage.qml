@@ -222,8 +222,8 @@ Page {
 
             labelFileName.text = element.filename
             setTitle(element.filename)
-            labelAlbum.text = element.album
-            labelArtist.text = element.artist
+            labelAlbum.text = (element.album !== undefined ?  element.album : "")
+            labelArtist.text = (element.artist !== undefined ? element.artist : "")
             setArtist(element.artist)
 
             delayAudio = element.audiodelay

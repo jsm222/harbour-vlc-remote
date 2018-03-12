@@ -31,8 +31,6 @@ OTHER_FILES += qml/harbour-vlc_remote.qml \
 
 HEADERS += \
     src/playlistmodel.h \
-    src/playlistmodel.h \
-    src/xmlitem.h \
     src/xmlitem.h \
     src/handler.h
 

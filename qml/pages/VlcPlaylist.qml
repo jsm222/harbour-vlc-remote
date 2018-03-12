@@ -11,40 +11,18 @@ property string currentId: "0";
         remoteUrl:rootWindow.ip+":"+rootWindow.port
     }
 
-    Timer {
-        id: xmlWaitTimer
-        interval: 50; running: false; repeat: true
-        onTriggered: updateXML()
-    }
-    Timer {
-        id: xmlRefresh
-        interval: 50; running: false; repeat: false
-        onTriggered: getVLCMedia();
-    }
-    Timer {
-        id:gainFocusTimer
-        interval: 10;running:false;repeat: true;
-        onTriggered: {listView.headerItem.forceActiveFocus()}
-    }
-
     SilicaListView {
         id: listView
         model:listModel.proxyModel
+        currentIndex: -1 // otherwise currentItem will steal focus while searching
         anchors.fill: parent
         header: SearchField {
             id:sf
             width: parent.width
             placeholderText: "Search playlist"
             text:""
-
             onTextChanged: {
-
                 listModel.search=sf.text;
-                gainFocusTimer.start();
-                if(sf.text==="") {
-                    gainFocusTimer.stop()
-                }
-
             }
 
 
@@ -69,14 +47,7 @@ property string currentId: "0";
                 onClicked: listView.scrollToTop()
             }
         }
-        /*        delegate: ListItem {
-             width: parent.width; height: 50
-           Text {
-               color:Theme.primaryColor
-               text:name
-           }
-        }
-*/
+
         delegate: ListItem {
             //           visible: found.indexOf(id) !==-1
             id: delegate
@@ -96,9 +67,7 @@ property string currentId: "0";
                 opacity: 0.8
                 source: id === "-1" ? "image://theme/icon-m-developer-mode" : name === "" ? null : id === currentId ? "icons/icon-cover-play.png" : "image://theme/icon-m-music"
             }
-
             Text {
-                //truncationMode: TruncationMode.Fade
                 color: delegate.highlighted || currentId === id ? Theme.highlightColor :  Theme.primaryColor
                 text:name
                 anchors.left: listIcon.right
